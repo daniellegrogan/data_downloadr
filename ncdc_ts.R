@@ -16,35 +16,44 @@ ncdc_ts = function(datasetid,       # character string; example: "GHCN". Use ncd
                    )
   { 
   
-  st.data.all  = lapply(yrs, 
-                        FUN = function(x) ncdc(datasetid  = datasetid, 
-                                               stationid  = stationid,
-                                               datatypeid = datatypeid, 
-                                               startdate  = paste(x, '-01-01', sep=""), 
-                                               enddate    = paste(x, '-12-31', sep=""), 
-                                               limit      = 365,
-                                               token      = token)
-  )
+  test = ncdc_stations(datasetid='GHCND', locationid='FIPS:12017', stationid='GHCND:USC00084289',
+                       token = my.token)
   
-  st.data.list = lapply(st.data.all, FUN = function(x) x$data)
-  st.data.df = do.call(rbind, st.data.list)
-  
-  if(is.na(out.nm)){
-    out = st.data.df
+  if(is.null(test$data)){
+    warning = "ERROR: rnoaa download failure"
+    out = warning
   }else{
-    if(length(st.data.df) > 0){
-      write.table(st.data.df, out.nm, row.names=F, sep=",")
-      out = paste("data written to", out.nm)
-    }else{
-      if(write.empty == T){
-        write.table(st.data.df, out.nm, row.names=F, sep=",")
-        out = paste("Empty data frame written to", out.nm)
-      }else{
-        out = "Empty data frame. No file written."
-      }
-    }
+    st.data.all  = lapply(yrs, 
+                          FUN = function(x) ncdc(datasetid  = datasetid, 
+                                                 stationid  = stationid,
+                                                 datatypeid = datatypeid, 
+                                                 startdate  = paste(x, '-01-01', sep=""), 
+                                                 enddate    = paste(x, '-12-31', sep=""), 
+                                                 limit      = 365,
+                                                 token      = token)
+    )
     
+    st.data.list = lapply(st.data.all, FUN = function(x) x$data)
+    st.data.df = do.call(rbind, st.data.list)
+    
+    if(is.na(out.nm)){
+      out = st.data.df
+    }else{
+      if(length(st.data.df) > 0){
+        write.table(st.data.df, out.nm, row.names=F, sep=",")
+        out = paste("data written to", out.nm)
+      }else{
+        if(write.empty == T){
+          write.table(st.data.df, out.nm, row.names=F, sep=",")
+          out = paste("Empty data frame written to", out.nm)
+        }else{
+          out = "Empty data frame. No file written."
+        }
+      }
+      
+    }
   }
+  
   return(out)
 }
 # END OF FUNCTION
